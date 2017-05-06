@@ -17,18 +17,67 @@ Vue.filter('statusGeneral', function(value){
 		return "Exitem "+ value +" conta(s) a serem paga(s)";
 	}
 });
-
+var menuComponent = Vue.extend({
+	template: `
+	<nav>
+	<ul>
+		<li v-for="o in menus"><a href="#"
+			@click.prevent="showView(o.id)">{{ o.name }}</a></li>
+	</ul>
+	</nav>
+	`,
+	data: function(){
+		return {
+			menus : [ {
+				id : 0,
+				name : "Listar contas"
+			}, {
+				id : 1,
+				name : "Criar contas"
+			} ],
+		};
+	},
+	methods: {
+		showView : function(id) {
+			this.activedView = id;
+			if(id == 1){
+				this.formType = 'insert';
+			}
+		},
+	}
+});
+Vue.component('menu-component', menuComponent);
 var appComponent = Vue.extend({
 	template: `
+	<style type="text/css">
+	.pago {
+		color: green;
+	}
+
+	.nao-pago {
+		color: red;
+	}
+
+	.red {
+		color: red;
+	}
+
+	.green {
+		color: green;
+	}
+
+	.gray {
+		color: gray;
+	}
+
+	.background {
+		background: burlywood;
+	}
+	</style>
 	<h1>{{ title }}</h1>
 	<h2 :class="{'gray': status === false, 'green': status === 0, 'red': status > 0}">{{
 		status | statusGeneral}}</h2>
-	<nav>
-		<ul>
-			<li v-for="o in menus"><a href="#"
-				@click.prevent="showView(o.id)">{{ o.name }}</a></li>
-		</ul>
-	</nav>
+		<menu-component></menu-component>
 	<div v-if="activedView == 0">
 			<table border="1" cellpadding="10">
 				<thead>
@@ -72,13 +121,6 @@ var appComponent = Vue.extend({
 	data : function(){
 		return {
 			title : "Contas a Pagar",
-			menus : [ {
-				id : 0,
-				name : "Listar contas"
-			}, {
-				id : 1,
-				name : "Criar contas"
-			} ],
 			activedView: 0,
 			formType: 'insert',
 			bill: {
@@ -155,12 +197,6 @@ var appComponent = Vue.extend({
 		}
 	},
 	methods : {
-		showView : function(id) {
-			this.activedView = id;
-			if(id == 1){
-				this.formType = 'insert';
-			}
-		},
 		submit: function() {
 			if(this.formType == 'insert'){
 				this.bills.push(this.bill);
