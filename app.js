@@ -39,15 +39,16 @@ var menuComponent = Vue.extend({
 	},
 	methods: {
 		showView : function(id) {
-			this.activedView = id;
+			this.$parent.activedView = id;
 			if(id == 1){
-				this.formType = 'insert';
+				this.$parent.formType = 'insert';
 			}
 		},
 	}
 });
 Vue.component('menu-component', menuComponent);
-var appComponent = Vue.extend({
+
+var billListComponent = Vue.extend({
 	template: `
 	<style type="text/css">
 	.pago {
@@ -57,7 +58,90 @@ var appComponent = Vue.extend({
 	.nao-pago {
 		color: red;
 	}
-
+	</style>
+	<table border="1" cellpadding="10">
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Vencimento</th>
+			<th>Nome</th>
+			<th>Valor</th>
+			<th>Status</th>
+			<th>Ação</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr v-for="(index,o) in bills">
+			<td>{{ index+1 }}</td>
+			<td>{{ o.date_due }}</td>
+			<td>{{ o.name }}</td>
+			<td>{{ o.value | currency '¥ ' 3}}</td>
+			<td class="background"
+				:class="{'pago': o.done, 'nao-pago': !o.done}">{{ o.done |
+				doneLabel }}</td>
+			<td><a href="#" @click.prevent="loadBill(o)">Editar</a> | <a
+				href="#" @click.prevent="deleteBill(o)">Destroy</a></td>
+		</tr>
+	</tbody>
+	</table>
+	`,
+	data: function(){
+		return {
+			bills : [ {
+				date_due : '20/08/2017',
+				name : 'Aluguel',
+				value : 68.123,
+				done : true
+			}, {
+				date_due : '21/08/2017',
+				name : 'Agua',
+				value : 10.111,
+				done : false
+			}, {
+				date_due : '22/08/2017',
+				name : 'Luz',
+				value : 3.222,
+				done : true
+			}, {
+				date_due : '23/08/2017',
+				name : 'Gaz',
+				value : 3.333,
+				done : false
+			}, {
+				date_due : '24/08/2017',
+				name : 'Cartão de credito',
+				value : 90.444,
+				done : false
+			}, {
+				date_due : '25/08/2017',
+				name : 'Emprestimo',
+				value : 300.555,
+				done : false
+			}, {
+				date_due : '26/08/2017',
+				name : 'Onibus',
+				value : 20.785,
+				done : false
+			} ]
+		};
+	},
+	methods: {
+		loadBill: function(bill) {
+			this.bill = bill;
+			this.$parent.activedView = 1;
+			this.$parent.formType = 'update';
+		},
+		deleteBill: function(bill){
+			if(confirm('Deseja excluir esta conta?')){
+				this.bills.$remove(bill);
+			}
+		}
+	}
+});
+Vue.component('bill-list-component', billListComponent);
+var appComponent = Vue.extend({
+	template: `
+	<style type="text/css">
 	.red {
 		color: red;
 	}
@@ -79,31 +163,7 @@ var appComponent = Vue.extend({
 		status | statusGeneral}}</h2>
 		<menu-component></menu-component>
 	<div v-if="activedView == 0">
-			<table border="1" cellpadding="10">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Vencimento</th>
-						<th>Nome</th>
-						<th>Valor</th>
-						<th>Status</th>
-						<th>Ação</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="(index,o) in bills">
-						<td>{{ index+1 }}</td>
-						<td>{{ o.date_due }}</td>
-						<td>{{ o.name }}</td>
-						<td>{{ o.value | currency '¥ ' 3}}</td>
-						<td class="background"
-							:class="{'pago': o.done, 'nao-pago': !o.done}">{{ o.done |
-							doneLabel }}</td>
-						<td><a href="#" @click.prevent="loadBill(o)">Editar</a> | <a
-							href="#" @click.prevent="deleteBill(o)">Destroy</a></td>
-					</tr>
-				</tbody>
-			</table>
+		<bill-list-component></bill-list-component>
 		</div>
 		<div v-if="activedView == 1">
 			<form name="form" @submit.prevent="submit">
@@ -144,42 +204,7 @@ var appComponent = Vue.extend({
 			        'Onibus',
 			        'Escola'
 			],
-			bills : [ {
-				date_due : '20/08/2017',
-				name : 'Aluguel',
-				value : 68.123,
-				done : true
-			}, {
-				date_due : '21/08/2017',
-				name : 'Agua',
-				value : 10.111,
-				done : false
-			}, {
-				date_due : '22/08/2017',
-				name : 'Luz',
-				value : 3.222,
-				done : true
-			}, {
-				date_due : '23/08/2017',
-				name : 'Gaz',
-				value : 3.333,
-				done : false
-			}, {
-				date_due : '24/08/2017',
-				name : 'Cartão de credito',
-				value : 90.444,
-				done : false
-			}, {
-				date_due : '25/08/2017',
-				name : 'Emprestimo',
-				value : 300.555,
-				done : false
-			}, {
-				date_due : '26/08/2017',
-				name : 'Onibus',
-				value : 20.785,
-				done : false
-			} ]
+
 		};
 	},
 	computed : {
@@ -208,16 +233,6 @@ var appComponent = Vue.extend({
 					done: false
 			};
 			this.activedView = 0;
-		},
-		loadBill: function(bill) {
-			this.bill = bill;
-			this.activedView = 1;
-			this.formType = 'update';
-		},
-		deleteBill: function(bill){
-			if(confirm('Deseja excluir esta conta?')){
-				this.bills.$remove(bill);
-			}
 		}
 	}
 });
